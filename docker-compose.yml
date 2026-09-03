@@ -1,0 +1,71 @@
+networks:
+  taskify-network:
+    driver: bridge
+
+volumes:
+  taskify-db-data:
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: taskify-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: taskify
+      POSTGRES_USER: taskify
+      POSTGRES_PASSWORD: taskify-local-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - taskify-db-data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - taskify-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskify -d taskify"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: taskify-api
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: taskify
+      PGUSER: taskify
+      PGPASSWORD: taskify-local-dev
+      PGSSLMODE: disable
+      CORS_ORIGIN: "http://localhost:5173"
+      AZURE_KEY_VAULT_URL: ""
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api/src:/app/src
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - taskify-network
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    container_name: taskify-web
+    restart: unless-stopped
+    environment:
+      VITE_API_PROXY_TARGET: "http://api:3000"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web/src:/app/src
+    depends_on:
+      - api
+    networks:
+      - taskify-network
