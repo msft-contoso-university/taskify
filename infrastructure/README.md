@@ -53,8 +53,8 @@ composable building blocks and should not be applied directly.
 
 ## Azure target
 
-- Subscription ID: `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77`
-- Tenant ID: `16b3c013-d300-468d-ac64-7eda0820b6d3`
+- Subscription ID: `c8c3c87b-d7b9-47fa-907a-0af1ea1cedab`
+- Tenant ID: `d11cdc76-c6f2-4368-a98f-498e78a7e011`
 
 These are documented here as expected `ARM_SUBSCRIPTION_ID` / `ARM_TENANT_ID`
 values (see `versions.tf` for how they're wired as variables). They are not
@@ -116,8 +116,8 @@ Once real Terraform resources exist under `environments/dev` (or `prod`), the
    | Variable | Purpose |
    |---|---|
    | `AZURE_CLIENT_ID` | Client ID of the OIDC app registration |
-   | `AZURE_TENANT_ID` | `16b3c013-d300-468d-ac64-7eda0820b6d3` |
-   | `AZURE_SUBSCRIPTION_ID` | `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77` |
+   | `AZURE_TENANT_ID` | `d11cdc76-c6f2-4368-a98f-498e78a7e011` |
+   | `AZURE_SUBSCRIPTION_ID` | `c8c3c87b-d7b9-47fa-907a-0af1ea1cedab` |
    | `TF_STATE_RESOURCE_GROUP` | Resource group holding the state storage account |
    | `TF_STATE_STORAGE_ACCOUNT` | Storage account name for step 1 |
    | `TF_STATE_CONTAINER` | Blob container name (e.g. `tfstate`) |

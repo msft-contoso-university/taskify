@@ -11,8 +11,8 @@ name: Terraform CD (Azure)
 #     to this repo/environment.
 #   - Repository/organization VARIABLES (not secrets, these are not sensitive):
 #       AZURE_CLIENT_ID        - the OIDC app registration's client ID
-#       AZURE_TENANT_ID        - 16b3c013-d300-468d-ac64-7eda0820b6d3
-#       AZURE_SUBSCRIPTION_ID  - b6f10878-9f8a-4b3f-8bc5-3464cdd79c77
+#       AZURE_TENANT_ID        - d11cdc76-c6f2-4368-a98f-498e78a7e011
+#       AZURE_SUBSCRIPTION_ID  - c8c3c87b-d7b9-47fa-907a-0af1ea1cedab
 #       TF_STATE_RESOURCE_GROUP, TF_STATE_STORAGE_ACCOUNT, TF_STATE_CONTAINER
 #         - the pre-provisioned remote state backend for `terraform init`
 #   - A GitHub Environment named "infra-dev-approval" with required
