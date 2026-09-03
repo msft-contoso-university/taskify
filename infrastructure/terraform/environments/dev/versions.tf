@@ -17,14 +17,15 @@ terraform {
     }
   }
 
-  # Remote state backend is intentionally left unconfigured in this scaffold.
-  # Configure an azurerm backend (storage account + container) before any
-  # real `terraform init` is run against Azure, e.g.:
-  #
-  # backend "azurerm" {
-  #   resource_group_name  = "rg-taskify-tfstate"
-  #   storage_account_name = "sttaskifytfstatedev"
-  #   container_name       = "tfstate"
-  #   key                  = "taskify-dev.tfstate"
-  # }
+  # Partial backend configuration: resource_group_name, storage_account_name,
+  # container_name, and key are supplied at init time via `-backend-config`
+  # flags (see .github/workflows/terraform-cd.yml and, for local use,
+  # `terraform init -backend-config=...` or a local backend.hcl you do not
+  # commit). This keeps environment-specific storage account names out of
+  # source control while still using a real remote state backend with
+  # locking once the backend storage account exists.
+  backend "azurerm" {
+    use_azuread_auth = true
+    use_oidc         = true
+  }
 }

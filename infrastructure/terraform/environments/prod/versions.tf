@@ -15,10 +15,10 @@ terraform {
     }
   }
 
-  # backend "azurerm" {
-  #   resource_group_name  = "rg-taskify-tfstate"
-  #   storage_account_name = "sttaskifytfstateprod"
-  #   container_name       = "tfstate"
-  #   key                  = "taskify-prod.tfstate"
-  # }
+  # Partial backend configuration supplied via -backend-config at init time;
+  # see environments/dev/versions.tf for the full explanation.
+  backend "azurerm" {
+    use_azuread_auth = true
+    use_oidc         = true
+  }
 }
