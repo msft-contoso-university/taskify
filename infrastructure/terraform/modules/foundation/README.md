@@ -40,6 +40,8 @@ The Key Vault name omits hyphens to satisfy Azure Key Vault naming rules.
 | `private_endpoints_subnet_address_prefixes` | Reserved private endpoint subnet CIDRs. | `["10.42.3.0/24"]` |
 | `key_vault_sku_name` | Key Vault SKU, `standard` or `premium`. | `standard` |
 | `key_vault_purge_protection_enabled` | Enables Key Vault purge protection. | `false` |
+| `key_vault_public_network_access_enabled` | Enables public network access to Key Vault. | `false` |
+| `key_vault_secret_officer_object_ids` | Optional object IDs granted `Key Vault Secrets Officer` on the vault. | `[]` |
 | `tags` | Additional tags merged with module defaults. | `{}` |
 
 ## Outputs
@@ -57,6 +59,7 @@ The Key Vault name omits hyphens to satisfy Azure Key Vault naming rules.
 | `key_vault_id` | Key Vault ID for RBAC role assignments and secret creation by later modules. |
 | `key_vault_name` | Key Vault name for secret resources and diagnostics. |
 | `key_vault_uri` | Key Vault URI for applications that need vault references. |
+| `key_vault_secret_officer_role_assignment_ids` | Optional secret-officer role assignment IDs, keyed by object ID. |
 
 ## Dev environment integration contract
 
@@ -73,3 +76,15 @@ module "foundation" {
 
 Later modules should consume this module's outputs directly instead of
 reconstructing resource names.
+
+Because the Key Vault uses RBAC authorization, any later module that creates
+`azurerm_key_vault_secret` resources needs a data-plane role such as
+`Key Vault Secrets Officer` scoped to `key_vault_id`. Pass the Terraform
+deployment principal or another secrets-management principal through
+`key_vault_secret_officer_object_ids`, or assign the equivalent role outside
+this module before creating secrets.
+
+Public network access is disabled by default and the vault firewall denies by
+default. Future secret-creating modules must run from an allowed network path
+(for example, a private endpoint or approved runner network) or explicitly opt
+into public network access during environment integration.

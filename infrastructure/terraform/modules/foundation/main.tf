@@ -77,8 +77,13 @@ resource "azurerm_key_vault" "this" {
   enable_rbac_authorization     = true
   purge_protection_enabled      = var.key_vault_purge_protection_enabled
   soft_delete_retention_days    = 7
-  public_network_access_enabled = true
+  public_network_access_enabled = var.key_vault_public_network_access_enabled
   tags                          = local.tags
+
+  network_acls {
+    bypass         = "AzureServices"
+    default_action = "Deny"
+  }
 
   lifecycle {
     precondition {
@@ -86,4 +91,12 @@ resource "azurerm_key_vault" "this" {
       error_message = "The computed Key Vault name must be 24 characters or less. Set key_vault_name to a valid unique name."
     }
   }
+}
+
+resource "azurerm_role_assignment" "key_vault_secret_officer" {
+  for_each = var.key_vault_secret_officer_object_ids
+
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = each.value
 }

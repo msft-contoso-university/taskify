@@ -88,6 +88,18 @@ variable "key_vault_purge_protection_enabled" {
   default     = false
 }
 
+variable "key_vault_public_network_access_enabled" {
+  description = "Whether public network access is enabled for the shared Key Vault."
+  type        = bool
+  default     = false
+}
+
+variable "key_vault_secret_officer_object_ids" {
+  description = "Microsoft Entra object IDs that should receive Key Vault Secrets Officer on this vault."
+  type        = set(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Tags applied to all foundation resources."
   type        = map(string)

@@ -50,3 +50,8 @@ output "key_vault_uri" {
   description = "URI of the shared Key Vault."
   value       = azurerm_key_vault.this.vault_uri
 }
+
+output "key_vault_secret_officer_role_assignment_ids" {
+  description = "Role assignment IDs for optional Key Vault Secrets Officer grants."
+  value       = { for object_id, assignment in azurerm_role_assignment.key_vault_secret_officer : object_id => assignment.id }
+}
