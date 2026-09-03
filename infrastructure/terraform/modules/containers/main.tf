@@ -41,12 +41,13 @@ resource "azurerm_log_analytics_workspace" "this" {
 }
 
 resource "azurerm_container_app_environment" "this" {
-  name                       = local.container_app_environment_name
-  location                   = var.location
-  resource_group_name        = var.resource_group_name
-  infrastructure_subnet_id   = var.container_apps_subnet_id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
-  tags                       = local.tags
+  name                         = local.container_app_environment_name
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+  infrastructure_subnet_id     = var.container_apps_subnet_id
+  internal_load_balancer_enabled = true
+  log_analytics_workspace_id   = azurerm_log_analytics_workspace.this.id
+  tags                         = local.tags
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
