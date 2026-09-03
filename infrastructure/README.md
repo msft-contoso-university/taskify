@@ -125,3 +125,7 @@ Once real Terraform resources exist under `environments/dev` (or `prod`), the
    No `secrets.*` are required for Azure auth itself when using OIDC. Add a
    secret only if a future module genuinely needs one (e.g. a third-party
    API key) — do not add one for the Azure login step.
+
+The backend uses Azure AD authentication (`use_azuread_auth = true`), so the
+OIDC app also needs `Storage Blob Data Contributor` on the state storage
+account.

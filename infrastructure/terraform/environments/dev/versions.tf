@@ -24,5 +24,7 @@ terraform {
   # commit). This keeps environment-specific storage account names out of
   # source control while still using a real remote state backend with
   # locking once the backend storage account exists.
-  backend "azurerm" {}
+  backend "azurerm" {
+    use_azuread_auth = true
+  }
 }

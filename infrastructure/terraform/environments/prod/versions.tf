@@ -17,5 +17,7 @@ terraform {
 
   # Partial backend configuration supplied via -backend-config at init time;
   # see environments/dev/versions.tf for the full explanation.
-  backend "azurerm" {}
+  backend "azurerm" {
+    use_azuread_auth = true
+  }
 }
