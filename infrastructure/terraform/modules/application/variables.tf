@@ -34,13 +34,39 @@ variable "acr_login_server" {
 }
 
 variable "key_vault_id" {
-  description = "Key Vault resource ID from the foundation module. The API identity is granted Key Vault Secrets User on this scope."
+  description = "Key Vault resource ID from the foundation module, used to scope API secret-read RBAC to required PostgreSQL secrets."
   type        = string
 }
 
 variable "key_vault_uri" {
   description = "Key Vault URI from the foundation module, passed to the API for managed-identity secret lookup."
   type        = string
+}
+
+variable "postgres_connection_host_secret_name" {
+  description = "Key Vault secret name for the PostgreSQL host from the data module."
+  type        = string
+}
+
+variable "postgres_admin_username_secret_name" {
+  description = "Key Vault secret name for the PostgreSQL admin username from the data module."
+  type        = string
+}
+
+variable "postgres_admin_password_secret_name" {
+  description = "Key Vault secret name for the PostgreSQL admin password from the data module."
+  type        = string
+}
+
+variable "postgres_connection_string_secret_name" {
+  description = "Key Vault secret name for the PostgreSQL connection string from the data module."
+  type        = string
+}
+
+variable "postgres_database_name" {
+  description = "PostgreSQL application database name from the data module."
+  type        = string
+  default     = "taskify"
 }
 
 variable "postgres_connection_string_secret_id" {

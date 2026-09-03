@@ -45,3 +45,8 @@ output "acr_pull_role_assignment_ids" {
     web = azurerm_role_assignment.web_acr_pull.id
   }
 }
+
+output "api_key_vault_secret_role_assignment_ids" {
+  description = "Key Vault Secrets User role assignment IDs for API-readable PostgreSQL secrets."
+  value       = { for secret_name, assignment in azurerm_role_assignment.api_key_vault_secrets_user : secret_name => assignment.id }
+}

@@ -7,7 +7,13 @@ locals {
   api_image = "${var.acr_login_server}/${var.api_image_repository}:${var.api_image_tag}"
   web_image = "${var.acr_login_server}/${var.web_image_repository}:${var.web_image_tag}"
 
-  postgres_connection_string_secret_name = "postgres-connection-string"
+  postgres_connection_string_container_app_secret_name = "postgres-connection-string"
+  api_key_vault_secret_names = toset([
+    var.postgres_connection_host_secret_name,
+    var.postgres_admin_username_secret_name,
+    var.postgres_admin_password_secret_name,
+    var.postgres_connection_string_secret_name
+  ])
 
   tags = merge(
     {
@@ -45,7 +51,9 @@ resource "azurerm_role_assignment" "web_acr_pull" {
 }
 
 resource "azurerm_role_assignment" "api_key_vault_secrets_user" {
-  scope                = var.key_vault_id
+  for_each = local.api_key_vault_secret_names
+
+  scope                = "${var.key_vault_id}/secrets/${each.value}"
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.api.principal_id
 }
@@ -68,7 +76,7 @@ resource "azurerm_container_app" "api" {
   }
 
   secret {
-    name                = local.postgres_connection_string_secret_name
+    name                = local.postgres_connection_string_container_app_secret_name
     identity            = azurerm_user_assigned_identity.api.id
     key_vault_secret_id = var.postgres_connection_string_secret_id
   }
@@ -111,7 +119,12 @@ resource "azurerm_container_app" "api" {
 
       env {
         name        = "POSTGRES_CONNECTION_STRING"
-        secret_name = local.postgres_connection_string_secret_name
+        secret_name = local.postgres_connection_string_container_app_secret_name
+      }
+
+      env {
+        name  = "PGDATABASE"
+        value = var.postgres_database_name
       }
 
       env {

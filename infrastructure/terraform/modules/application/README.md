@@ -17,6 +17,13 @@ The API uses internal Container Apps ingress (`external_enabled = false`) and
 is reachable only from within the Container Apps Environment. The web app uses
 external ingress and is the public entry point for smoke testing.
 
+`web_fqdn` is publicly reachable only when the supplied Container Apps
+Environment is configured for public ingress. If the environment is created
+with an internal load balancer, the web app still has external app ingress
+inside that environment but its FQDN is reachable only from the connected
+network. Final `environments/dev` wiring must ensure the environment-level
+ingress mode matches the smoke-test requirement.
+
 The web Container App receives `API_BASE_URL` set to the API app's internal
 Container Apps ingress URL. The deployable web image for Azure Container Apps
 must honor that runtime setting when proxying `/api` requests.
@@ -29,9 +36,11 @@ secret ID from `modules/data`. Terraform never accepts or emits the plaintext
 connection string. The secret is exposed to the API container only as a secret
 environment variable named `POSTGRES_CONNECTION_STRING`.
 
-The API also receives `AZURE_KEY_VAULT_URL` and `AZURE_CLIENT_ID` so the
-existing application code can continue retrieving database connection details
-from Key Vault with its managed identity.
+The current API image also uses `AZURE_KEY_VAULT_URL` and `AZURE_CLIENT_ID` to
+read the split host/username/password secrets directly from Key Vault. To keep
+that image working without broad vault access, the API managed identity is
+granted `Key Vault Secrets User` only on the PostgreSQL secret scopes named by
+this module's inputs.
 
 ## Inputs
 
@@ -43,9 +52,14 @@ from Key Vault with its managed identity.
 | `container_app_environment_id` | Container Apps Environment ID from `modules/containers`. | n/a |
 | `acr_id` | ACR resource ID from `modules/containers` for `AcrPull` assignments. | n/a |
 | `acr_login_server` | ACR login server from `modules/containers`, used to build image references. | n/a |
-| `key_vault_id` | Key Vault ID from `modules/foundation` for API secret-read RBAC. | n/a |
+| `key_vault_id` | Key Vault ID from `modules/foundation`, used to scope API secret-read RBAC. | n/a |
 | `key_vault_uri` | Key Vault URI from `modules/foundation`, passed to the API runtime. | n/a |
+| `postgres_connection_host_secret_name` | Key Vault secret name from `modules/data.key_vault_secret_names.host`. | n/a |
+| `postgres_admin_username_secret_name` | Key Vault secret name from `modules/data.key_vault_secret_names.admin_username`. | n/a |
+| `postgres_admin_password_secret_name` | Key Vault secret name from `modules/data.key_vault_secret_names.admin_password`. | n/a |
+| `postgres_connection_string_secret_name` | Key Vault secret name from `modules/data.key_vault_secret_names.connection_string`. | n/a |
 | `postgres_connection_string_secret_id` | Key Vault secret ID from `modules/data.key_vault_secret_ids.connection_string`. | n/a |
+| `postgres_database_name` | PostgreSQL database name from `modules/data.database_name`. | `taskify` |
 | `name_prefix` | Prefix used for resource names. | `taskify` |
 | `api_image_repository` | ACR repository name for the API image. | `taskify-api` |
 | `api_image_tag` | Existing API image tag in ACR. | `dev` |
@@ -74,6 +88,7 @@ from Key Vault with its managed identity.
 | `web_fqdn` | Public web ingress FQDN for smoke testing after apply. |
 | `web_identity_principal_id` | Web managed identity principal ID. |
 | `acr_pull_role_assignment_ids` | `AcrPull` role assignment IDs keyed by workload. |
+| `api_key_vault_secret_role_assignment_ids` | API `Key Vault Secrets User` role assignment IDs keyed by secret name. |
 
 ## Dev environment integration contract
 
@@ -95,7 +110,12 @@ module "application" {
   key_vault_id                 = module.foundation.key_vault_id
   key_vault_uri                = module.foundation.key_vault_uri
 
-  postgres_connection_string_secret_id = module.data.key_vault_secret_ids.connection_string
+  postgres_connection_host_secret_name   = module.data.key_vault_secret_names.host
+  postgres_admin_username_secret_name    = module.data.key_vault_secret_names.admin_username
+  postgres_admin_password_secret_name    = module.data.key_vault_secret_names.admin_password
+  postgres_connection_string_secret_name = module.data.key_vault_secret_names.connection_string
+  postgres_connection_string_secret_id   = module.data.key_vault_secret_ids.connection_string
+  postgres_database_name                 = module.data.database_name
 
   # These images must already be pushed to module.containers.acr_login_server.
   api_image_repository = "taskify-api"
