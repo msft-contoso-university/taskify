@@ -87,10 +87,9 @@ resource "azurerm_key_vault" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(local.key_vault_name) <= 24
-      error_message = "The computed Key Vault name must be 24 characters or less. Set key_vault_name to a valid unique name."
+      condition     = var.key_vault_name != null || (length(local.key_vault_name) <= 24 && can(regex("^[a-z][a-z0-9]{2,23}$", local.key_vault_name)))
+      error_message = "The computed Key Vault name must be 3-24 characters, start with a letter, and contain only lowercase letters and numbers. Set key_vault_name to a valid unique name."
     }
-  }
 }
 
 resource "azurerm_role_assignment" "key_vault_secret_officer" {
