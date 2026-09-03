@@ -15,7 +15,7 @@ managed identities plus RBAC (`AcrPull`) for image pulls.
 By default, resources use the `taskify-<environment>-*` convention used by
 `modules/foundation`. For `dev`, the default names include:
 
-- `taskifydevacr` (ACR name omits hyphens due Azure naming rules)
+- `taskifydevacr` (ACR name omits hyphens due to Azure naming rules)
 - `taskify-dev-law`
 - `taskify-dev-cae`
 
