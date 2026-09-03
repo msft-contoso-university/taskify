@@ -129,3 +129,8 @@ Once real Terraform resources exist under `environments/dev` (or `prod`), the
 The backend uses Azure AD authentication (`use_azuread_auth = true`), so the
 OIDC app also needs `Storage Blob Data Contributor` on the state storage
 account.
+
+If the storage account has `publicNetworkAccess = Disabled` (as required by
+the target subscription policy), GitHub-hosted runners cannot reach it. Run
+Terraform jobs on a self-hosted runner with VNet/private-endpoint access, or
+obtain an approved networking exception before enabling this workflow.
