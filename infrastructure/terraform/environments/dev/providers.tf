@@ -19,13 +19,13 @@ provider "azurerm" {
 variable "subscription_id" {
   description = "Azure subscription ID to deploy into."
   type        = string
-  default     = "c8c3c87b-d7b9-47fa-907a-0af1ea1cedab"
+  default     = "b6f10878-9f8a-4b3f-8bc5-3464cdd79c77"
 }
 
 variable "tenant_id" {
   description = "Azure AD tenant ID."
   type        = string
-  default     = "d11cdc76-c6f2-4368-a98f-498e78a7e011"
+  default     = "16b3c013-d300-468d-ac64-7eda0820b6d3"
 }
 
 variable "environment" {
