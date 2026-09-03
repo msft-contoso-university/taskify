@@ -81,3 +81,47 @@ terraform -chdir=infrastructure/terraform/environments/dev validate
 
 `terraform plan` / `terraform apply` are **not** run as part of this repo's
 CI or by any agent without explicit human sign-off.
+
+## Continuous deployment (`.github/workflows/terraform-cd.yml`)
+
+Once real Terraform resources exist under `environments/dev` (or `prod`), the
+`terraform-cd.yml` workflow is the only supported path to plan/apply them:
+
+- **Pull requests** touching `infrastructure/terraform/**` run
+  `terraform fmt -check`, `validate`, and `plan`, posting the plan as a PR
+  comment. Nothing is applied.
+- **Pushes to `main`** touching `infrastructure/terraform/**` run
+  `terraform apply -auto-approve`, but only after manual approval via the
+  `infra-dev-approval` GitHub Environment (configure required reviewers on
+  that environment before relying on this gate).
+- Azure auth uses **OIDC federation** (`azure/login@v2` +
+  `permissions: id-token: write`) — no client secret is stored in GitHub.
+
+### One-time setup required (human, not agent-performed)
+
+1. **Provision a remote state storage account** (chicken-and-egg: this can't
+   be created by the workflow that needs it to run). Create a resource group
+   + storage account + blob container for Terraform state, one per
+   environment (e.g. `sttaskifytfstatedev`).
+2. **Create an Azure AD App Registration** with a federated credential
+   trusting this repo (`repo:msft-contoso-university/taskify:ref:refs/heads/main`
+   for the apply job, and `repo:msft-contoso-university/taskify:pull_request`
+   for the plan job), and grant it `Contributor` on the target subscription
+   or resource group(s).
+3. **Create a GitHub Environment** named `infra-dev-approval` with required
+   reviewers configured — this is the human approval gate before any
+   `terraform apply`.
+4. **Set the following repository (or environment) Actions variables** —
+   these are configuration, not secrets, and can be plain `vars.*`:
+   | Variable | Purpose |
+   |---|---|
+   | `AZURE_CLIENT_ID` | Client ID of the OIDC app registration |
+   | `AZURE_TENANT_ID` | `16b3c013-d300-468d-ac64-7eda0820b6d3` |
+   | `AZURE_SUBSCRIPTION_ID` | `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77` |
+   | `TF_STATE_RESOURCE_GROUP` | Resource group holding the state storage account |
+   | `TF_STATE_STORAGE_ACCOUNT` | Storage account name for step 1 |
+   | `TF_STATE_CONTAINER` | Blob container name (e.g. `tfstate`) |
+
+   No `secrets.*` are required for Azure auth itself when using OIDC. Add a
+   secret only if a future module genuinely needs one (e.g. a third-party
+   API key) — do not add one for the Azure login step.

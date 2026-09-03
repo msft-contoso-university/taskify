@@ -1,0 +1,150 @@
+name: Terraform CD (Azure)
+
+# =============================================================================
+# Plans Terraform changes on pull requests touching infrastructure/terraform,
+# and applies them on merge to main -- gated by a GitHub Environment that
+# requires manual approval. Authenticates to Azure via OIDC (no client
+# secret stored in GitHub).
+#
+# Required one-time setup (see infrastructure/README.md "CD setup"):
+#   - An Azure AD App Registration + federated credential for OIDC, scoped
+#     to this repo/environment.
+#   - Repository/organization VARIABLES (not secrets, these are not sensitive):
+#       AZURE_CLIENT_ID        - the OIDC app registration's client ID
+#       AZURE_TENANT_ID        - 16b3c013-d300-468d-ac64-7eda0820b6d3
+#       AZURE_SUBSCRIPTION_ID  - b6f10878-9f8a-4b3f-8bc5-3464cdd79c77
+#       TF_STATE_RESOURCE_GROUP, TF_STATE_STORAGE_ACCOUNT, TF_STATE_CONTAINER
+#         - the pre-provisioned remote state backend for `terraform init`
+#   - A GitHub Environment named "infra-dev-approval" with required
+#     reviewers configured, used to gate the apply job.
+#   - No AZURE_CLIENT_SECRET is used or required -- OIDC federation only.
+# =============================================================================
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infrastructure/terraform/**"
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/terraform/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (dev or prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, prod]
+
+permissions:
+  id-token: write # required for OIDC federation to Azure
+  contents: read
+  pull-requests: write # to comment the plan output on the PR
+
+env:
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: true
+  TF_ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+  TF_WORKING_DIR: infrastructure/terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+
+jobs:
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.7"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}" \
+            -backend-config="key=taskify-${{ env.TF_ENVIRONMENT }}.tfstate"
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -no-color -input=false -out=tfplan
+        continue-on-error: true
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PLAN: "${{ steps.plan.outputs.stdout }}"
+        with:
+          script: |
+            const output = `#### Terraform Plan (\`${process.env.TF_ENVIRONMENT}\`)
+            \`\`\`
+            ${process.env.PLAN}
+            \`\`\`
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: []
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: infra-dev-approval # requires manual approval before running
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.7"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}" \
+            -backend-config="key=taskify-${{ env.TF_ENVIRONMENT }}.tfstate"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve -input=false
