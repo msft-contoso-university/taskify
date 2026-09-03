@@ -26,6 +26,6 @@ terraform {
   # locking once the backend storage account exists.
   backend "azurerm" {
     use_azuread_auth = true
-    use_oidc          = true
+    use_oidc         = true
   }
 }
