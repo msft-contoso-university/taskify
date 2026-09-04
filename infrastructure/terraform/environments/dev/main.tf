@@ -14,9 +14,9 @@ locals {
 
   tags = merge(
     {
-      managed-by = "terraform"
-      stack      = "taskify"
-    },
+      "managed-by" = "terraform"
+      stack        = "taskify"
+    }
     var.tags
   )
 }
