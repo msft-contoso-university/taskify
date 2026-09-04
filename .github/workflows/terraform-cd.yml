@@ -179,4 +179,18 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -auto-approve -input=false
+        shell: bash
+        run: |
+          # Key Vault firewall changes (including default_action) can take up to a
+          # couple of minutes to propagate on Azure's side. If the apply hits a
+          # transient 403 ForbiddenByFirewall while the ACL update is still
+          # propagating, wait and re-apply -- terraform apply is idempotent, so a
+          # retry safely picks up wherever the previous attempt left off.
+          for attempt in 1 2 3 4; do
+            if terraform apply -auto-approve -input=false; then
+              exit 0
+            fi
+            echo "Apply attempt $attempt failed (possibly Key Vault ACL propagation delay); waiting before retry..."
+            sleep 60
+          done
+          exit 1
