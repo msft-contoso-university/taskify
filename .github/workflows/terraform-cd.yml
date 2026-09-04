@@ -79,15 +79,15 @@ jobs:
       - name: Configure Key Vault deployment access
         shell: bash
         run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          [[ "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
-            echo "Unable to determine the runner's IPv4 address." >&2
-            exit 1
-          }
+          # GitHub-hosted runners egress through a pool of IPs that can change
+          # between requests within the same job, so allow-listing a single
+          # captured IP is unreliable (leads to transient 403 ForbiddenByFirewall
+          # errors). For this demo/dev environment, temporarily open the Key
+          # Vault firewall for the duration of the apply instead.
           printf 'TF_VAR_key_vault_public_network_access_enabled=true\n' >> "$GITHUB_ENV"
-          printf 'TF_VAR_key_vault_network_acls_ip_rules=["%s/32"]\n' "$runner_ip" >> "$GITHUB_ENV"
+          printf 'TF_VAR_key_vault_network_acls_default_action=Allow\n' >> "$GITHUB_ENV"
           printf 'TF_VAR_grant_deployer_key_vault_secret_officer=true\n' >> "$GITHUB_ENV"
-          printf 'TF_VAR_postgres_public_network_access_ip_rules=["%s"]\n' "$runner_ip" >> "$GITHUB_ENV"
+          printf 'TF_VAR_postgres_public_access_allow_all_azure_ips=true\n' >> "$GITHUB_ENV"
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -158,15 +158,15 @@ jobs:
       - name: Configure Key Vault deployment access
         shell: bash
         run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          [[ "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
-            echo "Unable to determine the runner's IPv4 address." >&2
-            exit 1
-          }
+          # GitHub-hosted runners egress through a pool of IPs that can change
+          # between requests within the same job, so allow-listing a single
+          # captured IP is unreliable (leads to transient 403 ForbiddenByFirewall
+          # errors). For this demo/dev environment, temporarily open the Key
+          # Vault firewall for the duration of the apply instead.
           printf 'TF_VAR_key_vault_public_network_access_enabled=true\n' >> "$GITHUB_ENV"
-          printf 'TF_VAR_key_vault_network_acls_ip_rules=["%s/32"]\n' "$runner_ip" >> "$GITHUB_ENV"
+          printf 'TF_VAR_key_vault_network_acls_default_action=Allow\n' >> "$GITHUB_ENV"
           printf 'TF_VAR_grant_deployer_key_vault_secret_officer=true\n' >> "$GITHUB_ENV"
-          printf 'TF_VAR_postgres_public_network_access_ip_rules=["%s"]\n' "$runner_ip" >> "$GITHUB_ENV"
+          printf 'TF_VAR_postgres_public_access_allow_all_azure_ips=true\n' >> "$GITHUB_ENV"
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -179,15 +179,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
-        shell: bash
-        run: |
-          # Key Vault network ACL changes made earlier in this same apply can take a
-          # short time to propagate; retry a few times on transient 403 ForbiddenByFirewall.
-          for attempt in 1 2 3; do
-            if terraform apply -auto-approve -input=false; then
-              exit 0
-            fi
-            echo "Apply attempt $attempt failed, retrying after Key Vault ACL propagation delay..."
-            sleep 30
-          done
-          exit 1
+        run: terraform apply -auto-approve -input=false
