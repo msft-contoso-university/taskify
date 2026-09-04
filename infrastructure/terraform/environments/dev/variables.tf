@@ -359,4 +359,4 @@ variable "max_replicas" {
   default     = 1
 }
 
-# trigger: open-firewall-retest
+# trigger: backoff-retest
