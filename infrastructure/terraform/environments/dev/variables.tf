@@ -24,7 +24,12 @@ variable "environment" {
 variable "location" {
   description = "Azure region for resources."
   type        = string
-  default     = "eastus"
+  # eastus/eastus2/westus2/southcentralus/westeurope are currently restricted
+  # for PostgreSQL Flexible Server provisioning on this subscription
+  # (ParameterOutOfRange / "Subscriptions are restricted from provisioning in
+  # this region" from `az postgres flexible-server list-skus`). centralus is
+  # unrestricted and supports the postgres_version default below.
+  default = "centralus"
 }
 
 variable "name_prefix" {
@@ -334,7 +339,3 @@ variable "max_replicas" {
   type        = number
   default     = 1
 }
-
-# trigger apply: 2026-09-03T22:11:10.3103232-04:00
-
-# retry apply after granting RBAC role: 2026-09-03T22:33:22.2957691-04:00
