@@ -65,6 +65,12 @@ resource "azurerm_container_app" "api" {
   revision_mode                = "Single"
   tags                         = local.tags
 
+  lifecycle {
+    precondition {
+      condition     = can(regex("^[a-z0-9-]{2,32}$", local.api_container_app_name))
+      error_message = "API Container App name must be 2-32 lowercase letters, numbers, or hyphens. Set api_container_app_name or reduce name_prefix/environment."
+    }
+  }
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.api.id]
