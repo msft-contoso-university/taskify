@@ -58,6 +58,28 @@ infrastructure/            Terraform IaC — see infrastructure/README.md
 - Issues describing infra/deployment needs should be labeled `infra-request`
   by the Issue Triage workflow so they're easy to find and route to the
   Terraform agents above.
+- **Copilot coding agent cannot push changes to `.github/workflows/`.** Its
+  push token deliberately omits the `workflows` permission, so any commit
+  that creates or edits a file there is rejected with *"refusing to allow a
+  GitHub App to create or update workflow ... without `workflows`
+  permission"*. This is a security guardrail (an agent must not be able to
+  author CI that then runs with this repo's secrets and Azure OIDC
+  federation) and there is no setting that grants it. Scope coding-agent
+  issues so they don't touch that directory; a human adds or edits the
+  workflow file in a follow-up commit. Note this also covers the gh-aw
+  `*.lock.yml` files, which are recompiled from `*.md` in the same folder.
+  Two things to carry over when you land that human commit:
+  - **Your git credentials need `workflow` scope too**, not just the agent's.
+    A token without it hits the same rejection (*"refusing to allow an OAuth
+    App to create or update workflow ..."*). Check with `gh auth status`.
+  - **Re-add the Azure Boards work item link by hand.** Boards links a PR by
+    scanning its title, description, and commit messages for an `AB#<id>`
+    mention — there is no structural link. PRs opened *by* Azure DevOps get a
+    `Work item: [AB#<id>](<url>)` footer appended automatically, so a
+    hand-authored replacement PR silently loses the board link unless you
+    append that footer yourself. Use the plain `Work item:` form to link
+    without transitioning state on merge; `Fixes AB#<id>` will (depending on
+    Boards config) auto-close the work item instead.
 - Use the `/plan` command on a triaged issue to break it into concrete
   sub-issues before assigning work to Copilot coding agent — don't hand
   large, vague issues directly to the coding agent.
