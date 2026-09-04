@@ -45,6 +45,7 @@ permissions:
 env:
   ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
   ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: b6f10878-9f8a-4b3f-8bc5-3464cdd79c77
   ARM_USE_OIDC: true
   # Force the environment's tenant_id Terraform variable to match the
   # OIDC-authenticated identity. The subscription is intentionally read from
@@ -70,8 +71,10 @@ jobs:
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
       - name: Configure Key Vault deployment access
+        shell: bash
         run: |
           runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
           [[ "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
@@ -146,8 +149,10 @@ jobs:
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
       - name: Configure Key Vault deployment access
+        shell: bash
         run: |
           runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
           [[ "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
