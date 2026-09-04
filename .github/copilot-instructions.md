@@ -58,6 +58,16 @@ infrastructure/            Terraform IaC — see infrastructure/README.md
 - Issues describing infra/deployment needs should be labeled `infra-request`
   by the Issue Triage workflow so they're easy to find and route to the
   Terraform agents above.
+- **Copilot coding agent cannot push changes to `.github/workflows/`.** Its
+  push token deliberately omits the `workflows` permission, so any commit
+  that creates or edits a file there is rejected with *"refusing to allow a
+  GitHub App to create or update workflow ... without `workflows`
+  permission"*. This is a security guardrail (an agent must not be able to
+  author CI that then runs with this repo's secrets and Azure OIDC
+  federation) and there is no setting that grants it. Scope coding-agent
+  issues so they don't touch that directory; a human adds or edits the
+  workflow file in a follow-up commit. Note this also covers the gh-aw
+  `*.lock.yml` files, which are recompiled from `*.md` in the same folder.
 - Use the `/plan` command on a triaged issue to break it into concrete
   sub-issues before assigning work to Copilot coding agent — don't hand
   large, vague issues directly to the coding agent.

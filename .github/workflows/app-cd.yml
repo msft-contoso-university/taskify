@@ -1,0 +1,140 @@
+name: App CD (ACR images)
+
+# =============================================================================
+# Builds the Taskify API and Web container images and publishes them to the dev
+# Azure Container Registry.
+#
+# On pull requests touching apps/**, images are built only (no push) so a broken
+# Dockerfile fails the PR without publishing anything. On merge to main, images
+# are built and pushed, tagged with both the commit SHA (immutable, traceable)
+# and a moving `dev` tag that matches the Terraform `api_image_tag` /
+# `web_image_tag` defaults in infrastructure/terraform/environments/dev.
+#
+# Authenticates to Azure via OIDC federation (azure/login@v2 + id-token: write),
+# mirroring terraform-cd.yml -- no registry username/password or client secret is
+# stored in GitHub. The OIDC identity needs AcrPush on the target registry.
+#
+# Required repository VARIABLES (not secrets -- none are sensitive under OIDC):
+#   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID  (already set)
+#   ACR_NAME  - optional; defaults to taskifydevacr
+#
+# NOTE: this workflow only publishes images. Rolling the Container Apps onto a
+# new image is Terraform's job (api_image_tag / web_image_tag), so pushing a new
+# `dev` tag does not by itself redeploy the running apps.
+# =============================================================================
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - ".github/workflows/app-cd.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - ".github/workflows/app-cd.yml"
+  workflow_dispatch:
+    inputs:
+      push_images:
+        description: "Push images to ACR (uncheck to build only)"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  id-token: write # required for OIDC federation to Azure
+  contents: read
+
+env:
+  ACR_NAME: ${{ vars.ACR_NAME || 'taskifydevacr' }}
+  API_REPOSITORY: taskify-api
+  WEB_REPOSITORY: taskify-web
+  MOVING_TAG: dev
+
+jobs:
+  build:
+    name: Build and publish ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            context: apps/api
+            repository_var: API_REPOSITORY
+          - name: web
+            context: apps/web
+            repository_var: WEB_REPOSITORY
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image repository
+        id: image
+        shell: bash
+        run: |
+          case "${{ matrix.name }}" in
+            api) repository="$API_REPOSITORY" ;;
+            web) repository="$WEB_REPOSITORY" ;;
+            *) echo "Unknown matrix entry: ${{ matrix.name }}" >&2; exit 1 ;;
+          esac
+          echo "repository=${repository}" >> "$GITHUB_OUTPUT"
+          echo "registry=${ACR_NAME}.azurecr.io" >> "$GITHUB_OUTPUT"
+
+      # Push on merges to main, or when explicitly requested via workflow_dispatch.
+      # Pull requests always build only -- a fork PR has no access to the OIDC
+      # identity, and an untrusted PR must never be able to publish an image that
+      # the dev environment would then run.
+      - name: Determine whether to push
+        id: mode
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "push=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.push_images }}" = "true" ]; then
+            echo "push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Azure login (OIDC)
+        if: steps.mode.outputs.push == 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: ACR login
+        if: steps.mode.outputs.push == 'true'
+        run: az acr login --name "$ACR_NAME"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/Dockerfile
+          push: ${{ steps.mode.outputs.push == 'true' }}
+          tags: |
+            ${{ steps.image.outputs.registry }}/${{ steps.image.outputs.repository }}:${{ github.sha }}
+            ${{ steps.image.outputs.registry }}/${{ steps.image.outputs.repository }}:${{ env.MOVING_TAG }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "### ${{ matrix.name }} image"
+            echo ""
+            if [ "${{ steps.mode.outputs.push }}" = "true" ]; then
+              echo "Pushed to \`${{ steps.image.outputs.registry }}/${{ steps.image.outputs.repository }}\`:"
+              echo ""
+              echo "- \`${{ github.sha }}\`"
+              echo "- \`${{ env.MOVING_TAG }}\`"
+            else
+              echo "Build-only run (no push)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
