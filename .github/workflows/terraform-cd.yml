@@ -177,6 +177,14 @@ jobs:
             -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}" \
             -backend-config="key=taskify-${{ env.TF_ENVIRONMENT }}.tfstate"
 
+      - name: Terraform Apply (Key Vault firewall first)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve -input=false \
+            -target=module.foundation.azurerm_key_vault.this
+          echo "Waiting for Key Vault network ACL changes to propagate..."
+          sleep 60
+
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve -input=false
