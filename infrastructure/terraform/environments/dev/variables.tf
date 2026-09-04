@@ -359,4 +359,4 @@ variable "max_replicas" {
   default     = 1
 }
 
-# trigger: kv-propagation-fix-retest
+# trigger: apply-retry-retest
