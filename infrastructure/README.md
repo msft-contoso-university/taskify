@@ -2,14 +2,15 @@
 
 Infrastructure as Code for Taskify, provisioned on Azure.
 
-## Policy: this is scaffolding, not deployed infrastructure
+## Policy: dev is an authored environment, apply is human-approved
 
-This directory intentionally contains **structure only** — module folders,
-environment folders, and starter provider/version configuration. It does
-**not** contain fully authored Azure resources, and nothing here has been
-applied against a real subscription.
+The Terraform under `infrastructure/terraform/environments/dev` now composes
+the `foundation`, `data`, `containers`, and `application` modules into a single
+dev stack. A plan from that root module provisions the resource group,
+networking, Key Vault, PostgreSQL, ACR, Container Apps Environment, and the API
++ web Container Apps.
 
-Real Terraform authoring for this repo happens **live, through the agentic
+Terraform authoring for this repo still happens **live, through the agentic
 SDLC workflow**, not as a one-off local generation step:
 
 1. A user (or team) opens a GitHub issue describing infrastructure or
@@ -23,7 +24,7 @@ SDLC workflow**, not as a one-off local generation step:
    the custom agents in `.github/agents/` (`azure-iac-generator`,
    `terraform-azure-implement`, `terraform-iac-reviewer`) and the repo-level
    memory in `.github/copilot-instructions.md`.
-5. Copilot coding agent opens a PR with the actual Terraform. The
+5. Copilot coding agent opens a PR with Terraform changes. The
    **Copilot code review** agent plus a human reviewer approve it before
    merge. `terraform plan` output should be attached to the PR for review;
    `terraform apply` requires explicit human approval and is never run
@@ -71,7 +72,7 @@ when it picks up a sub-issue.
 
 ## Local validation
 
-Even though no resources are deployed, the scaffold should always pass:
+The dev root module should always pass formatting and validation:
 
 ```bash
 terraform fmt -check -recursive infrastructure/terraform
@@ -79,13 +80,13 @@ terraform -chdir=infrastructure/terraform/environments/dev init -backend=false
 terraform -chdir=infrastructure/terraform/environments/dev validate
 ```
 
-`terraform plan` / `terraform apply` are **not** run as part of this repo's
-CI or by any agent without explicit human sign-off.
+Pull requests run `terraform plan` through the CD workflow. `terraform apply`
+is **not** run by any agent without explicit human sign-off.
 
 ## Continuous deployment (`.github/workflows/terraform-cd.yml`)
 
-Once real Terraform resources exist under `environments/dev` (or `prod`), the
-`terraform-cd.yml` workflow is the only supported path to plan/apply them:
+The `terraform-cd.yml` workflow is the supported path to plan/apply the dev
+environment:
 
 - **Pull requests** touching `infrastructure/terraform/**` run
   `terraform fmt -check`, `validate`, and `plan`, posting the plan as a PR
