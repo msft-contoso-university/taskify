@@ -48,6 +48,12 @@ env:
   ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
   ARM_USE_OIDC: true
+  # Force the environment's tenant_id/subscription_id Terraform variables to
+  # match the OIDC-authenticated identity above, so a stale hardcoded default
+  # in variables.tf can never silently point the azurerm provider at the
+  # wrong tenant/subscription (which manifests as an opaque AADSTS53003).
+  TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+  TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
   TF_ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
   TF_WORKING_DIR: infrastructure/terraform/environments/${{ github.event.inputs.environment || 'dev' }}
 

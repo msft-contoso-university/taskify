@@ -1,13 +1,13 @@
 variable "subscription_id" {
   description = "Azure subscription ID to deploy into."
   type        = string
-  default     = "b6f10878-9f8a-4b3f-8bc5-3464cdd79c77"
+  default     = "8fcc5e8e-6540-4288-89e7-849e94290205"
 }
 
 variable "tenant_id" {
   description = "Azure AD tenant ID."
   type        = string
-  default     = "16b3c013-d300-468d-ac64-7eda0820b6d3"
+  default     = "d11cdc76-c6f2-4368-a98f-498e78a7e011"
 }
 
 variable "environment" {
