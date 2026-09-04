@@ -359,4 +359,4 @@ variable "max_replicas" {
   default     = 1
 }
 
-# trigger: backoff-retest
+# trigger: no-refresh-retest
