@@ -127,7 +127,6 @@ environment:
    |---|---|
    | `AZURE_CLIENT_ID` | Client ID of the OIDC app registration |
    | `AZURE_TENANT_ID` | `16b3c013-d300-468d-ac64-7eda0820b6d3` |
-   | `AZURE_SUBSCRIPTION_ID` | `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77` |
    | `TF_STATE_RESOURCE_GROUP` | Resource group holding the state storage account |
    | `TF_STATE_STORAGE_ACCOUNT` | Storage account name for step 1 |
    | `TF_STATE_CONTAINER` | Blob container name (e.g. `tfstate`) |
