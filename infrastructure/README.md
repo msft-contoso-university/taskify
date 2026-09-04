@@ -2,14 +2,24 @@
 
 Infrastructure as Code for Taskify, provisioned on Azure.
 
-## Policy: this is scaffolding, not deployed infrastructure
+## Policy: dev is an authored environment, apply is human-approved
 
-This directory intentionally contains **structure only** — module folders,
-environment folders, and starter provider/version configuration. It does
-**not** contain fully authored Azure resources, and nothing here has been
-applied against a real subscription.
+The Terraform under `infrastructure/terraform/environments/dev` now composes
+the `foundation`, `data`, `containers`, and `application` modules into a single
+dev stack. A plan from that root module provisions the resource group,
+networking, Key Vault, PostgreSQL, ACR, Container Apps Environment, and the API
++ web Container Apps.
 
-Real Terraform authoring for this repo happens **live, through the agentic
+The dev environment intentionally makes the Container Apps Environment
+internet-reachable so the `web_fqdn` output can be used for smoke testing;
+that removes internal-only isolation at the Container Apps Environment level.
+It keeps Key Vault public network access and deployer secret-officer grants
+disabled by default; deployments from a public runner must explicitly opt into
+scoped Key Vault network ACLs and a secret-writing principal, or use a runner
+with approved private network access before creating generated PostgreSQL
+secrets.
+
+Terraform authoring for this repo still happens **live, through the agentic
 SDLC workflow**, not as a one-off local generation step:
 
 1. A user (or team) opens a GitHub issue describing infrastructure or
@@ -23,7 +33,7 @@ SDLC workflow**, not as a one-off local generation step:
    the custom agents in `.github/agents/` (`azure-iac-generator`,
    `terraform-azure-implement`, `terraform-iac-reviewer`) and the repo-level
    memory in `.github/copilot-instructions.md`.
-5. Copilot coding agent opens a PR with the actual Terraform. The
+5. Copilot coding agent opens a PR with Terraform changes. The
    **Copilot code review** agent plus a human reviewer approve it before
    merge. `terraform plan` output should be attached to the PR for review;
    `terraform apply` requires explicit human approval and is never run
@@ -53,7 +63,7 @@ composable building blocks and should not be applied directly.
 
 ## Azure target
 
-- Subscription ID: `8fcc5e8e-6540-4288-89e7-849e94290205`
+- Subscription ID: `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77`
 - Tenant ID: `16b3c013-d300-468d-ac64-7eda0820b6d3`
 
 These are documented here as expected `ARM_SUBSCRIPTION_ID` / `ARM_TENANT_ID`
@@ -71,7 +81,7 @@ when it picks up a sub-issue.
 
 ## Local validation
 
-Even though no resources are deployed, the scaffold should always pass:
+The dev root module should always pass formatting and validation:
 
 ```bash
 terraform fmt -check -recursive infrastructure/terraform
@@ -79,13 +89,13 @@ terraform -chdir=infrastructure/terraform/environments/dev init -backend=false
 terraform -chdir=infrastructure/terraform/environments/dev validate
 ```
 
-`terraform plan` / `terraform apply` are **not** run as part of this repo's
-CI or by any agent without explicit human sign-off.
+Pull requests run `terraform plan` through the CD workflow. `terraform apply`
+is **not** run by any agent without explicit human sign-off.
 
 ## Continuous deployment (`.github/workflows/terraform-cd.yml`)
 
-Once real Terraform resources exist under `environments/dev` (or `prod`), the
-`terraform-cd.yml` workflow is the only supported path to plan/apply them:
+The `terraform-cd.yml` workflow is the supported path to plan/apply the dev
+environment:
 
 - **Pull requests** touching `infrastructure/terraform/**` run
   `terraform fmt -check`, `validate`, and `plan`, posting the plan as a PR
@@ -117,7 +127,7 @@ Once real Terraform resources exist under `environments/dev` (or `prod`), the
    |---|---|
    | `AZURE_CLIENT_ID` | Client ID of the OIDC app registration |
    | `AZURE_TENANT_ID` | `16b3c013-d300-468d-ac64-7eda0820b6d3` |
-   | `AZURE_SUBSCRIPTION_ID` | `8fcc5e8e-6540-4288-89e7-849e94290205` |
+   | `AZURE_SUBSCRIPTION_ID` | `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77` |
    | `TF_STATE_RESOURCE_GROUP` | Resource group holding the state storage account |
    | `TF_STATE_STORAGE_ACCOUNT` | Storage account name for step 1 |
    | `TF_STATE_CONTAINER` | Blob container name (e.g. `tfstate`) |

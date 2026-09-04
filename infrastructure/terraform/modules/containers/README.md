@@ -37,6 +37,7 @@ and this execution boundary is scoped to `modules/containers` only.
 | `acr_name` | Optional ACR name override for global uniqueness. | `null` |
 | `acr_sku` | ACR SKU for dev (`Basic` or `Standard`). | `Basic` |
 | `container_app_environment_name` | Optional Container Apps Environment name override. | `null` |
+| `container_app_environment_internal_load_balancer_enabled` | Whether the Container Apps Environment uses an internal load balancer. | `true` |
 | `log_analytics_workspace_name` | Optional Log Analytics workspace name override. | `null` |
 | `acr_pull_principal_ids` | Optional object IDs granted `AcrPull` on ACR. | `[]` |
 | `tags` | Additional tags merged with module defaults. | `{}` |

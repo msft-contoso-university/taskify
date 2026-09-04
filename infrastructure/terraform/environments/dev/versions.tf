@@ -1,10 +1,7 @@
 # =============================================================================
 # Terraform & Provider Versions — Dev Environment
 # =============================================================================
-# This is scaffolding only: it pins the Terraform and AzureRM provider
-# versions so that real resource authoring (done later via the agentic
-# workflow) starts from a consistent, known-good baseline. No resources are
-# defined here yet.
+# Pins the Terraform and provider versions for the composed dev environment.
 # =============================================================================
 
 terraform {

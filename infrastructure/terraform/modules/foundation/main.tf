@@ -61,10 +61,10 @@ resource "azurerm_subnet" "postgres" {
 }
 
 resource "azurerm_subnet" "private_endpoints" {
-  name                              = "${local.base_name}-private-endpoints-snet"
-  resource_group_name               = azurerm_resource_group.this.name
-  virtual_network_name              = azurerm_virtual_network.this.name
-  address_prefixes                  = var.private_endpoints_subnet_address_prefixes
+  name                                      = "${local.base_name}-private-endpoints-snet"
+  resource_group_name                       = azurerm_resource_group.this.name
+  virtual_network_name                      = azurerm_virtual_network.this.name
+  address_prefixes                          = var.private_endpoints_subnet_address_prefixes
   private_endpoint_network_policies_enabled = false
 }
 
@@ -81,8 +81,10 @@ resource "azurerm_key_vault" "this" {
   tags                          = local.tags
 
   network_acls {
-    bypass         = "None"
-    default_action = "Deny"
+    bypass                     = var.key_vault_network_acls_bypass
+    default_action             = var.key_vault_network_acls_default_action
+    ip_rules                   = var.key_vault_network_acls_ip_rules
+    virtual_network_subnet_ids = var.key_vault_network_acls_virtual_network_subnet_ids
   }
 
   lifecycle {
@@ -90,6 +92,7 @@ resource "azurerm_key_vault" "this" {
       condition     = var.key_vault_name != null || (length(local.key_vault_name) <= 24 && can(regex("^[a-z][a-z0-9]{2,23}$", local.key_vault_name)))
       error_message = "The computed Key Vault name must be 3-24 characters, start with a letter, and contain only lowercase letters and numbers. Set key_vault_name to a valid unique name."
     }
+  }
 }
 
 resource "azurerm_role_assignment" "key_vault_secret_officer" {

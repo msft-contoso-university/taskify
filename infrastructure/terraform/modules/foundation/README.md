@@ -41,6 +41,10 @@ The Key Vault name omits hyphens to satisfy Azure Key Vault naming rules.
 | `key_vault_sku_name` | Key Vault SKU, `standard` or `premium`. | `standard` |
 | `key_vault_purge_protection_enabled` | Enables Key Vault purge protection. | `false` |
 | `key_vault_public_network_access_enabled` | Enables public network access to Key Vault. | `false` |
+| `key_vault_network_acls_default_action` | Default Key Vault firewall action, `Allow` or `Deny`. | `Deny` |
+| `key_vault_network_acls_bypass` | Key Vault firewall bypass mode, `AzureServices` or `None`. | `None` |
+| `key_vault_network_acls_ip_rules` | Public IP addresses or CIDR ranges allowed through the Key Vault firewall. | `[]` |
+| `key_vault_network_acls_virtual_network_subnet_ids` | Subnet IDs allowed through the Key Vault firewall. | `[]` |
 | `key_vault_secret_officer_object_ids` | Optional object IDs granted `Key Vault Secrets Officer` on the vault. | `[]` |
 | `tags` | Additional tags merged with module defaults. | `{}` |
 
