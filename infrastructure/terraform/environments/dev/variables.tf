@@ -336,3 +336,5 @@ variable "max_replicas" {
 }
 
 # trigger apply: 2026-09-03T22:11:10.3103232-04:00
+
+# retry apply after granting RBAC role: 2026-09-03T22:33:22.2957691-04:00
