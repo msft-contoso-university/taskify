@@ -24,7 +24,7 @@ output "container_app_environment_name" {
 }
 
 output "api_fqdn" {
-  description = "Internal ingress FQDN for the dev API Container App."
+  description = "Ingress FQDN for the dev API Container App."
   value       = module.application.api_fqdn
 }
 

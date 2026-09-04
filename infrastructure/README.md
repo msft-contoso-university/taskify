@@ -11,11 +11,13 @@ networking, Key Vault, PostgreSQL, ACR, Container Apps Environment, and the API
 + web Container Apps.
 
 The dev environment intentionally makes the Container Apps Environment
-internet-reachable so the `web_fqdn` output can be used for smoke testing. It
-keeps Key Vault public network access denied by default; deployments from a
-public runner must explicitly opt into scoped Key Vault network ACLs or use a
-runner with approved private network access before creating generated
-PostgreSQL secrets.
+internet-reachable so the `web_fqdn` output can be used for smoke testing;
+that removes internal-only isolation at the Container Apps Environment level.
+It keeps Key Vault public network access and deployer secret-officer grants
+disabled by default; deployments from a public runner must explicitly opt into
+scoped Key Vault network ACLs and a secret-writing principal, or use a runner
+with approved private network access before creating generated PostgreSQL
+secrets.
 
 Terraform authoring for this repo still happens **live, through the agentic
 SDLC workflow**, not as a one-off local generation step:

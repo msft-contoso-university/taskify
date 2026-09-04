@@ -5,9 +5,11 @@
 # =============================================================================
 
 locals {
+  deployer_key_vault_secret_officer_object_ids = var.grant_deployer_key_vault_secret_officer ? toset([data.azurerm_client_config.current.object_id]) : toset([])
+
   key_vault_secret_officer_object_ids = setunion(
     var.key_vault_secret_officer_object_ids,
-    toset([data.azurerm_client_config.current.object_id])
+    local.deployer_key_vault_secret_officer_object_ids
   )
 
   tags = merge(

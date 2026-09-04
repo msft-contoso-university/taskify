@@ -108,6 +108,12 @@ variable "key_vault_secret_officer_object_ids" {
   default     = []
 }
 
+variable "grant_deployer_key_vault_secret_officer" {
+  description = "Whether to grant Key Vault Secrets Officer to the current Terraform deployer identity so it can create generated PostgreSQL secrets."
+  type        = bool
+  default     = false
+}
+
 variable "vnet_address_space" {
   description = "Address space for the dev virtual network."
   type        = list(string)
@@ -234,7 +240,7 @@ variable "container_app_environment_name" {
 }
 
 variable "container_app_environment_internal_load_balancer_enabled" {
-  description = "Whether the Container Apps Environment uses an internal load balancer. Dev defaults to false so web_fqdn is publicly reachable."
+  description = "Whether the Container Apps Environment uses an internal load balancer. Dev defaults to false so web_fqdn is publicly reachable, which removes internal-only isolation at the environment level."
   type        = bool
   default     = false
 }
