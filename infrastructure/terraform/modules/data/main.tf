@@ -17,14 +17,16 @@ locals {
 }
 
 resource "azurerm_private_dns_zone" "postgres" {
+  count               = var.use_private_networking ? 1 : 0
   name                = local.private_dns_zone_name
   resource_group_name = var.resource_group_name
   tags                = local.tags
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "postgres" {
+  count                 = var.use_private_networking ? 1 : 0
   name                  = "${local.base_name}-postgres-dns-link"
-  private_dns_zone_name = azurerm_private_dns_zone.postgres.name
+  private_dns_zone_name = azurerm_private_dns_zone.postgres[0].name
   resource_group_name   = var.resource_group_name
   virtual_network_id    = var.virtual_network_id
   tags                  = local.tags
@@ -41,9 +43,9 @@ resource "azurerm_postgresql_flexible_server" "this" {
   location                      = var.location
   resource_group_name           = var.resource_group_name
   version                       = var.postgres_version
-  delegated_subnet_id           = var.postgres_delegated_subnet_id
-  private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
-  public_network_access_enabled = false
+  delegated_subnet_id           = var.use_private_networking ? var.postgres_delegated_subnet_id : null
+  private_dns_zone_id           = var.use_private_networking ? azurerm_private_dns_zone.postgres[0].id : null
+  public_network_access_enabled = !var.use_private_networking
 
   administrator_login    = var.administrator_login
   administrator_password = random_password.postgres_admin.result
@@ -55,6 +57,22 @@ resource "azurerm_postgresql_flexible_server" "this" {
   tags = local.tags
 
   depends_on = [azurerm_private_dns_zone_virtual_network_link.postgres]
+}
+
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_services" {
+  count            = !var.use_private_networking && var.public_access_allow_all_azure_ips ? 1 : 0
+  name             = "AllowAllAzureServicesAndResourcesWithinAzureIps"
+  server_id        = azurerm_postgresql_flexible_server.this.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_ips" {
+  for_each         = !var.use_private_networking ? toset(var.public_network_access_ip_rules) : toset([])
+  name             = "allow-${replace(each.value, ".", "-")}"
+  server_id        = azurerm_postgresql_flexible_server.this.id
+  start_ip_address = each.value
+  end_ip_address   = each.value
 }
 
 resource "azurerm_postgresql_flexible_server_database" "app" {

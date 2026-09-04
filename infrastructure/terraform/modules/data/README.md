@@ -8,17 +8,26 @@ Provisions the Taskify data layer for an environment:
 - Key Vault secrets for host/user/password/database and full connection string
 
 This module is designed to consume networking + Key Vault outputs from
-`modules/foundation` and does not enable public network access.
+`modules/foundation`. By default it uses private VNet integration (no public
+network access). Set `use_private_networking = false` to instead expose the
+server via public network access gated by firewall rules — this is useful
+when the server needs to live in a different Azure region than the shared
+VNet (e.g. because the subscription restricts PostgreSQL Flexible Server
+provisioning in the VNet's region), since a delegated subnet must be in the
+same region as the server it's attached to.
 
 ## Inputs
 
 | Name | Description | Default |
 |---|---|---|
 | `environment` | Environment name used in naming/tags. | n/a |
-| `location` | Azure region for resources. | n/a |
+| `location` | Azure region for resources. May differ from the rest of the environment when `use_private_networking = false`. | n/a |
 | `resource_group_name` | Resource group for server and DNS resources. | n/a |
-| `postgres_delegated_subnet_id` | Delegated PostgreSQL subnet ID from `foundation`. | n/a |
-| `virtual_network_id` | VNet ID from `foundation` (used for private DNS link). | n/a |
+| `use_private_networking` | Attach to the delegated VNet subnet + private DNS (`true`) or use public network access + firewall rules (`false`). | `true` |
+| `postgres_delegated_subnet_id` | Delegated PostgreSQL subnet ID from `foundation`. Required only when `use_private_networking = true`. | `null` |
+| `virtual_network_id` | VNet ID from `foundation` (used for private DNS link). Required only when `use_private_networking = true`. | `null` |
+| `public_access_allow_all_azure_ips` | When `use_private_networking = false`, allow all Azure-internal IPs (0.0.0.0 rule) through the firewall. | `false` |
+| `public_network_access_ip_rules` | When `use_private_networking = false`, single IP addresses allowed through the firewall (e.g. the CI runner IP). | `[]` |
 | `key_vault_id` | Key Vault ID from `foundation` for secret storage. | n/a |
 | `name_prefix` | Naming prefix. | `taskify` |
 | `server_name` | Optional PostgreSQL server name override. | `null` |

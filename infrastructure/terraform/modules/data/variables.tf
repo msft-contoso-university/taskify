@@ -9,8 +9,20 @@ variable "environment" {
 }
 
 variable "location" {
-  description = "Azure region for data resources."
+  description = "Azure region for data resources. May differ from other resources' region since PostgreSQL Flexible Server does not require VNet delegation when running with public network access (demo/dev only)."
   type        = string
+}
+
+variable "use_private_networking" {
+  description = "Whether to attach PostgreSQL to the delegated VNet subnet with a private DNS zone (true) or expose it via public network access gated by firewall rules (false). Use false when postgres_location differs from the VNet's region, since delegated subnets must be in the same region as the server."
+  type        = bool
+  default     = true
+}
+
+variable "public_access_allow_all_azure_ips" {
+  description = "When use_private_networking is false, whether to allow all Azure-internal IPs (0.0.0.0 firewall rule) so Container Apps in a different region/VNet can reach the server. Demo/dev convenience only — do not use for production."
+  type        = bool
+  default     = false
 }
 
 variable "resource_group_name" {
@@ -105,13 +117,21 @@ variable "database_name" {
 }
 
 variable "postgres_delegated_subnet_id" {
-  description = "ID of the delegated PostgreSQL subnet from the foundation module."
+  description = "ID of the delegated PostgreSQL subnet from the foundation module. Required only when use_private_networking is true."
   type        = string
+  default     = null
 }
 
 variable "virtual_network_id" {
-  description = "ID of the shared virtual network from the foundation module."
+  description = "ID of the shared virtual network from the foundation module. Required only when use_private_networking is true."
   type        = string
+  default     = null
+}
+
+variable "public_network_access_ip_rules" {
+  description = "CIDR-free single IP addresses allowed through the PostgreSQL firewall when use_private_networking is false (e.g. the GitHub Actions runner IP at apply time)."
+  type        = list(string)
+  default     = []
 }
 
 variable "private_dns_zone_name" {

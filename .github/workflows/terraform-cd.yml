@@ -87,6 +87,7 @@ jobs:
           printf 'TF_VAR_key_vault_public_network_access_enabled=true\n' >> "$GITHUB_ENV"
           printf 'TF_VAR_key_vault_network_acls_ip_rules=["%s/32"]\n' "$runner_ip" >> "$GITHUB_ENV"
           printf 'TF_VAR_grant_deployer_key_vault_secret_officer=true\n' >> "$GITHUB_ENV"
+          printf 'TF_VAR_postgres_public_network_access_ip_rules=["%s"]\n' "$runner_ip" >> "$GITHUB_ENV"
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -165,6 +166,7 @@ jobs:
           printf 'TF_VAR_key_vault_public_network_access_enabled=true\n' >> "$GITHUB_ENV"
           printf 'TF_VAR_key_vault_network_acls_ip_rules=["%s/32"]\n' "$runner_ip" >> "$GITHUB_ENV"
           printf 'TF_VAR_grant_deployer_key_vault_secret_officer=true\n' >> "$GITHUB_ENV"
+          printf 'TF_VAR_postgres_public_network_access_ip_rules=["%s"]\n' "$runner_ip" >> "$GITHUB_ENV"
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}

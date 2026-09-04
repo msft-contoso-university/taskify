@@ -49,14 +49,17 @@ module "foundation" {
 module "data" {
   source = "../../modules/data"
 
-  environment                  = var.environment
-  location                     = var.location
-  name_prefix                  = var.name_prefix
-  tags                         = local.tags
-  resource_group_name          = module.foundation.resource_group_name
-  postgres_delegated_subnet_id = module.foundation.subnet_ids.postgres
-  virtual_network_id           = module.foundation.virtual_network_id
-  key_vault_id                 = module.foundation.key_vault_id
+  environment                       = var.environment
+  location                          = var.postgres_location
+  name_prefix                       = var.name_prefix
+  tags                              = local.tags
+  resource_group_name               = module.foundation.resource_group_name
+  use_private_networking            = var.postgres_use_private_networking
+  postgres_delegated_subnet_id      = var.postgres_use_private_networking ? module.foundation.subnet_ids.postgres : null
+  virtual_network_id                = var.postgres_use_private_networking ? module.foundation.virtual_network_id : null
+  public_access_allow_all_azure_ips = var.postgres_public_access_allow_all_azure_ips
+  public_network_access_ip_rules    = var.postgres_public_network_access_ip_rules
+  key_vault_id                      = module.foundation.key_vault_id
 
   server_name                   = var.postgres_server_name
   private_dns_zone_name         = var.postgres_private_dns_zone_name

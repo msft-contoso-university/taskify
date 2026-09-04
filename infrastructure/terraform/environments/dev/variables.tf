@@ -24,12 +24,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region for resources."
   type        = string
-  # eastus/eastus2/westus2/southcentralus/westeurope are currently restricted
-  # for PostgreSQL Flexible Server provisioning on this subscription
-  # (ParameterOutOfRange / "Subscriptions are restricted from provisioning in
-  # this region" from `az postgres flexible-server list-skus`). centralus is
-  # unrestricted and supports the postgres_version default below.
-  default = "centralus"
+  default     = "eastus"
 }
 
 variable "name_prefix" {
@@ -141,6 +136,30 @@ variable "private_endpoints_subnet_address_prefixes" {
   description = "Address prefixes for the subnet reserved for future private endpoints."
   type        = list(string)
   default     = ["10.42.3.0/24"]
+}
+
+variable "postgres_location" {
+  description = "Azure region for the PostgreSQL Flexible Server. Some subscriptions restrict Flexible Server provisioning in certain regions (e.g. eastus, where the rest of this environment lives); set this to an unrestricted region without moving the rest of the environment. Only takes effect when postgres_use_private_networking is false, since a delegated subnet must share the VNet's region."
+  type        = string
+  default     = "centralus"
+}
+
+variable "postgres_use_private_networking" {
+  description = "Whether PostgreSQL uses the shared VNet's delegated subnet + private DNS (true), or public network access gated by firewall rules (false). Set to false to place Postgres in a different region than the shared VNet (demo/dev only)."
+  type        = bool
+  default     = false
+}
+
+variable "postgres_public_access_allow_all_azure_ips" {
+  description = "When postgres_use_private_networking is false, whether to allow all Azure-internal traffic to reach the server so Container Apps (in a different region/VNet) can connect. Demo/dev convenience only."
+  type        = bool
+  default     = true
+}
+
+variable "postgres_public_network_access_ip_rules" {
+  description = "Single IP addresses allowed through the PostgreSQL firewall when postgres_use_private_networking is false (e.g. the GitHub Actions runner IP, set at apply time)."
+  type        = list(string)
+  default     = []
 }
 
 variable "postgres_server_name" {

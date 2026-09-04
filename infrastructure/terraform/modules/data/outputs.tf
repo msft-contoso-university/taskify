@@ -19,8 +19,8 @@ output "database_name" {
 }
 
 output "private_dns_zone_id" {
-  description = "ID of the PostgreSQL private DNS zone."
-  value       = azurerm_private_dns_zone.postgres.id
+  description = "ID of the PostgreSQL private DNS zone. Null when use_private_networking is false."
+  value       = var.use_private_networking ? azurerm_private_dns_zone.postgres[0].id : null
 }
 
 output "key_vault_secret_names" {
