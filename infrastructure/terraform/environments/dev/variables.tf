@@ -57,7 +57,7 @@ variable "key_vault_name" {
 }
 
 variable "key_vault_public_network_access_enabled" {
-  description = "Whether public network access is enabled for the shared Key Vault."
+  description = "Whether public network access is enabled for the shared Key Vault. Keep false unless Terraform runs from an allowed private network path or scoped network ACLs are configured for secret creation."
   type        = bool
   default     = false
 }
