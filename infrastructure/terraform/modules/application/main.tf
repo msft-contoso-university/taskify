@@ -180,7 +180,7 @@ resource "azurerm_container_app" "web" {
 
       env {
         name  = "API_BASE_URL"
-        value = "https://${azurerm_container_app.api.latest_revision_fqdn}"
+        value = "https://${azurerm_container_app.api.ingress[0].fqdn}"
       }
     }
   }
