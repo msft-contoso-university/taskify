@@ -29,15 +29,19 @@ module "foundation" {
   name_prefix = var.name_prefix
   tags        = local.tags
 
-  resource_group_name                       = var.resource_group_name
-  key_vault_name                            = var.key_vault_name
-  key_vault_public_network_access_enabled   = var.key_vault_public_network_access_enabled
-  key_vault_purge_protection_enabled        = var.key_vault_purge_protection_enabled
-  key_vault_secret_officer_object_ids       = local.key_vault_secret_officer_object_ids
-  vnet_address_space                        = var.vnet_address_space
-  container_apps_subnet_address_prefixes    = var.container_apps_subnet_address_prefixes
-  postgres_subnet_address_prefixes          = var.postgres_subnet_address_prefixes
-  private_endpoints_subnet_address_prefixes = var.private_endpoints_subnet_address_prefixes
+  resource_group_name                               = var.resource_group_name
+  key_vault_name                                    = var.key_vault_name
+  key_vault_public_network_access_enabled           = var.key_vault_public_network_access_enabled
+  key_vault_network_acls_default_action             = var.key_vault_network_acls_default_action
+  key_vault_network_acls_bypass                     = var.key_vault_network_acls_bypass
+  key_vault_network_acls_ip_rules                   = var.key_vault_network_acls_ip_rules
+  key_vault_network_acls_virtual_network_subnet_ids = var.key_vault_network_acls_virtual_network_subnet_ids
+  key_vault_purge_protection_enabled                = var.key_vault_purge_protection_enabled
+  key_vault_secret_officer_object_ids               = local.key_vault_secret_officer_object_ids
+  vnet_address_space                                = var.vnet_address_space
+  container_apps_subnet_address_prefixes            = var.container_apps_subnet_address_prefixes
+  postgres_subnet_address_prefixes                  = var.postgres_subnet_address_prefixes
+  private_endpoints_subnet_address_prefixes         = var.private_endpoints_subnet_address_prefixes
 }
 
 module "data" {
@@ -79,10 +83,11 @@ module "containers" {
   resource_group_name      = module.foundation.resource_group_name
   container_apps_subnet_id = module.foundation.subnet_ids.container_apps
 
-  acr_name                       = var.acr_name
-  acr_sku                        = var.acr_sku
-  container_app_environment_name = var.container_app_environment_name
-  log_analytics_workspace_name   = var.log_analytics_workspace_name
+  acr_name                                                 = var.acr_name
+  acr_sku                                                  = var.acr_sku
+  container_app_environment_name                           = var.container_app_environment_name
+  container_app_environment_internal_load_balancer_enabled = var.container_app_environment_internal_load_balancer_enabled
+  log_analytics_workspace_name                             = var.log_analytics_workspace_name
 
   depends_on = [module.foundation]
 }

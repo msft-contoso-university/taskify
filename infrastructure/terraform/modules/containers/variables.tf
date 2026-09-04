@@ -62,6 +62,12 @@ variable "container_app_environment_name" {
   default     = null
 }
 
+variable "container_app_environment_internal_load_balancer_enabled" {
+  description = "Whether the Container Apps Environment uses an internal load balancer."
+  type        = bool
+  default     = true
+}
+
 variable "log_analytics_workspace_name" {
   description = "Optional Log Analytics workspace name override. Defaults to <name_prefix>-<environment>-law."
   type        = string

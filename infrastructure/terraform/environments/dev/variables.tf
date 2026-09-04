@@ -1,7 +1,7 @@
 variable "subscription_id" {
   description = "Azure subscription ID to deploy into."
   type        = string
-  default     = "8fcc5e8e-6540-4288-89e7-849e94290205"
+  default     = "b6f10878-9f8a-4b3f-8bc5-3464cdd79c77"
 }
 
 variable "tenant_id" {
@@ -59,7 +59,31 @@ variable "key_vault_name" {
 variable "key_vault_public_network_access_enabled" {
   description = "Whether public network access is enabled for the shared Key Vault."
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "key_vault_network_acls_default_action" {
+  description = "Default firewall action for Key Vault network ACLs."
+  type        = string
+  default     = "Allow"
+}
+
+variable "key_vault_network_acls_bypass" {
+  description = "Traffic bypass setting for Key Vault network ACLs."
+  type        = string
+  default     = "None"
+}
+
+variable "key_vault_network_acls_ip_rules" {
+  description = "Public IP addresses or CIDR ranges allowed through the Key Vault firewall."
+  type        = list(string)
+  default     = []
+}
+
+variable "key_vault_network_acls_virtual_network_subnet_ids" {
+  description = "Subnet IDs allowed through the Key Vault firewall."
+  type        = list(string)
+  default     = []
 }
 
 variable "key_vault_purge_protection_enabled" {
@@ -194,6 +218,12 @@ variable "container_app_environment_name" {
   default     = null
 }
 
+variable "container_app_environment_internal_load_balancer_enabled" {
+  description = "Whether the Container Apps Environment uses an internal load balancer. Dev defaults to false so web_fqdn is publicly reachable."
+  type        = bool
+  default     = false
+}
+
 variable "log_analytics_workspace_name" {
   description = "Optional Log Analytics workspace name override."
   type        = string
@@ -225,9 +255,9 @@ variable "web_image_tag" {
 }
 
 variable "api_container_app_name" {
-  description = "Optional API Container App name override."
+  description = "API Container App name. Defaults to api so the checked-in web image can proxy /api to http://api:3000."
   type        = string
-  default     = null
+  default     = "api"
 }
 
 variable "web_container_app_name" {

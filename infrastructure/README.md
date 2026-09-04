@@ -10,6 +10,11 @@ dev stack. A plan from that root module provisions the resource group,
 networking, Key Vault, PostgreSQL, ACR, Container Apps Environment, and the API
 + web Container Apps.
 
+The dev environment intentionally makes the Container Apps Environment
+internet-reachable so the `web_fqdn` output can be used for smoke testing. It
+also enables Key Vault public network access with RBAC protection so the
+approved CD workflow can create generated PostgreSQL secrets from its runner.
+
 Terraform authoring for this repo still happens **live, through the agentic
 SDLC workflow**, not as a one-off local generation step:
 
@@ -54,7 +59,7 @@ composable building blocks and should not be applied directly.
 
 ## Azure target
 
-- Subscription ID: `8fcc5e8e-6540-4288-89e7-849e94290205`
+- Subscription ID: `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77`
 - Tenant ID: `16b3c013-d300-468d-ac64-7eda0820b6d3`
 
 These are documented here as expected `ARM_SUBSCRIPTION_ID` / `ARM_TENANT_ID`
@@ -118,7 +123,7 @@ environment:
    |---|---|
    | `AZURE_CLIENT_ID` | Client ID of the OIDC app registration |
    | `AZURE_TENANT_ID` | `16b3c013-d300-468d-ac64-7eda0820b6d3` |
-   | `AZURE_SUBSCRIPTION_ID` | `8fcc5e8e-6540-4288-89e7-849e94290205` |
+   | `AZURE_SUBSCRIPTION_ID` | `b6f10878-9f8a-4b3f-8bc5-3464cdd79c77` |
    | `TF_STATE_RESOURCE_GROUP` | Resource group holding the state storage account |
    | `TF_STATE_STORAGE_ACCOUNT` | Storage account name for step 1 |
    | `TF_STATE_CONTAINER` | Blob container name (e.g. `tfstate`) |

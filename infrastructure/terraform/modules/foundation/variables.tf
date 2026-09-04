@@ -94,6 +94,40 @@ variable "key_vault_public_network_access_enabled" {
   default     = false
 }
 
+variable "key_vault_network_acls_default_action" {
+  description = "Default firewall action for Key Vault network ACLs."
+  type        = string
+  default     = "Deny"
+
+  validation {
+    condition     = contains(["Allow", "Deny"], var.key_vault_network_acls_default_action)
+    error_message = "key_vault_network_acls_default_action must be either Allow or Deny."
+  }
+}
+
+variable "key_vault_network_acls_bypass" {
+  description = "Traffic bypass setting for Key Vault network ACLs."
+  type        = string
+  default     = "None"
+
+  validation {
+    condition     = contains(["AzureServices", "None"], var.key_vault_network_acls_bypass)
+    error_message = "key_vault_network_acls_bypass must be either AzureServices or None."
+  }
+}
+
+variable "key_vault_network_acls_ip_rules" {
+  description = "Public IP addresses or CIDR ranges allowed through the Key Vault firewall."
+  type        = list(string)
+  default     = []
+}
+
+variable "key_vault_network_acls_virtual_network_subnet_ids" {
+  description = "Subnet IDs allowed through the Key Vault firewall."
+  type        = list(string)
+  default     = []
+}
+
 variable "key_vault_secret_officer_object_ids" {
   description = "Microsoft Entra object IDs that should receive Key Vault Secrets Officer on this vault."
   type        = set(string)
