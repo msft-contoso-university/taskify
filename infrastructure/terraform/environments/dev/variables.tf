@@ -358,5 +358,3 @@ variable "max_replicas" {
   type        = number
   default     = 1
 }
-
-# trigger: no-refresh-retest
