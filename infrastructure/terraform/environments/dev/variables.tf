@@ -59,13 +59,13 @@ variable "key_vault_name" {
 variable "key_vault_public_network_access_enabled" {
   description = "Whether public network access is enabled for the shared Key Vault."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "key_vault_network_acls_default_action" {
   description = "Default firewall action for Key Vault network ACLs."
   type        = string
-  default     = "Allow"
+  default     = "Deny"
 
   validation {
     condition     = contains(["Allow", "Deny"], var.key_vault_network_acls_default_action)
@@ -220,6 +220,11 @@ variable "acr_sku" {
   description = "ACR SKU for this environment."
   type        = string
   default     = "Basic"
+
+  validation {
+    condition     = contains(["Basic", "Standard"], var.acr_sku)
+    error_message = "acr_sku must be either Basic or Standard."
+  }
 }
 
 variable "container_app_environment_name" {
