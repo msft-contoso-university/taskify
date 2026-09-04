@@ -9,8 +9,8 @@
 # =============================================================================
 
 provider "azurerm" {
-  subscription_id = var.subscription_id
-  tenant_id       = var.tenant_id
+  subscription_id = trimspace(var.subscription_id)
+  tenant_id       = trimspace(var.tenant_id)
 
   features {}
 }
