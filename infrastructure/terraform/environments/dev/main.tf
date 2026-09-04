@@ -16,7 +16,7 @@ locals {
     {
       "managed-by" = "terraform"
       stack        = "taskify"
-    }
+    },
     var.tags
   )
 }
