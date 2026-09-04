@@ -334,3 +334,5 @@ variable "max_replicas" {
   type        = number
   default     = 1
 }
+
+# trigger apply: 2026-09-03T22:11:10.3103232-04:00
