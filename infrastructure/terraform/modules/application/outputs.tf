@@ -10,7 +10,7 @@ output "api_container_app_name" {
 
 output "api_fqdn" {
   description = "Internal ingress FQDN for the API Container App."
-  value       = azurerm_container_app.api.latest_revision_fqdn
+  value       = azurerm_container_app.api.ingress[0].fqdn
 }
 
 output "api_identity_principal_id" {
